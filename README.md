@@ -19,23 +19,9 @@ You’ll need a Kubernetes cluster to run against. You can use [KIND](https://si
 
 N.B. - I've only gotten this working in-cluster on an AMD64 cluster, not an ARM cluster!!!
 
-0. Install flux on the cluster
 
-Follow directions here for other systems: https://fluxcd.io/flux/installation/#install-the-flux-cli
 
-```sh
-make -B zarf
-```
-
-When running this command, I did need to log into the ghcr.io registry with a GitHub token to successfully pull down the source-controller image
-
-1. Instal CRDs on the cluster
-
-```sh
-make install
-```
-
-2. Zarf init you cluster
+1. Zarf init you cluster
 
 This wont be a step forever.  The vision is that when the controller starts running in the cluster it would run this command and continue to run zarf init each time it starts to ensure updates occur as versions of zarf get updated.
 
@@ -51,9 +37,10 @@ agent-hook-7b4b5947cd-lt94s             1/1     Running   0          2m10s
 zarf-docker-registry-768f588b5d-qk82m   1/1     Running   0          22s
 ```
 	
-3. Deploy the controller to the cluster with the image specified by `IMG`:
+2. Deploy the controller to the cluster with the image specified by `IMG`:
 
 ```sh
+make -B zarf # forces rebuild of zarf package
 make zarf-deploy
 kubectl get pods -n zarf-controller-system
 ```
@@ -81,6 +68,13 @@ In this example the controller watches a particular Zarf.yaml file stored in git
 kubectl apply -f examples/doom-git.yaml
 ```
 
+
+4.b Doom via OCI
+remember to delete the git version before deploying this
+
+```sh
+kubectl apply -f examples/doom-oci.yaml
+```
 
 
 ### Uninstall CRDs
