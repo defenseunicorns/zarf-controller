@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: source-controller
+  namespace: flux-system
+spec:
+  gateways:
+  - istio-system/public
+  hosts:
+  - source-controller.bigbang.dev
+  http:
+  - route:
+    - destination:
+        host: source-controller.flux-system.svc.cluster.local
+        port:
+          number: 80

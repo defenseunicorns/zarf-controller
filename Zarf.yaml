@@ -1,0 +1,25 @@
+kind: ZarfPackageConfig
+metadata:
+  name: zarf-controller
+  description: "Zarf Controller"
+
+components:
+  - name: flux
+    required: true
+    manifests:
+      - name: source-controller
+        namespace: flux-system
+        files:
+        - zarf/flux.yaml
+    images:
+    - ghcr.io/fluxcd/source-controller:v0.30.0
+  - name: controller
+    required: true
+    manifests:
+      - name: controller
+        namespace: zarf-controller-system
+        files:
+          - zarf/install.yaml
+    images:
+      - runyontr/zarf-controller:0.0.2
+      - gcr.io/kubebuilder/kube-rbac-proxy:v0.13.0

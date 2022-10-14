@@ -1,0 +1,23 @@
+apiVersion: zarf.dev/v1beta1
+kind: Installation
+metadata:
+  name: doom
+spec:
+spec:
+  interval: 2m
+  sourceRef:
+    kind: GitRepository
+    name: zarf
+  path: ./examples/game
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: GitRepository
+metadata:
+  name: zarf
+  namespace: default
+spec:
+  interval: 1m0s
+  ref:
+    branch: master
+  url: https://github.com/defenseunicorns/zarf
+---

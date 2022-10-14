@@ -1,0 +1,24 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: OCIRepository
+metadata:
+  name: zarf-hello-world
+  namespace: default
+spec:
+  interval: 5m0s
+  # url: oci:///docker.io/defenseunicorns/zarf-hello-world
+  url: oci:///runyontr/zarf-game
+  ref:
+    tag: amd64
+---
+apiVersion: zarf.dev/v1beta1
+kind: Installation
+metadata:
+  name: hello-world
+  namespace: default
+spec:
+spec:
+  interval: 1m
+  sourceRef:
+    kind: OCIRepository
+    name: zarf-hello-world
+  path: ""

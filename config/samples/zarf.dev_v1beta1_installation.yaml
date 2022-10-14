@@ -1,0 +1,12 @@
+apiVersion: zarf.dev/v1beta1
+kind: Installation
+metadata:
+  labels:
+    app.kubernetes.io/name: installation
+    app.kubernetes.io/instance: installation-sample
+    app.kubernetes.io/part-of: zarf-controller
+    app.kuberentes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: zarf-controller
+  name: installation-sample
+spec:
+  # TODO(user): Add fields here

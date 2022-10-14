@@ -1,0 +1,16 @@
+domain: zarf.dev
+layout:
+- go.kubebuilder.io/v4-alpha
+projectName: zarf-controller
+repo: github.com/defenseunicorns/zarf-controller
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: zarf.dev
+  group: zarf.dev
+  kind: Installation
+  path: github.com/defenseunicorns/zarf-controller/api/v1beta1
+  version: v1beta1
+version: "3"
