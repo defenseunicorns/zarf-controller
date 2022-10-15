@@ -178,18 +178,20 @@ func (r *InstallationReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 	baseDir := filepath.Join(dir, install.Spec.Path)
 
-	if _, err := os.Stat(filepath.Join(baseDir, config.ZarfYAML)); errors.Is(err, os.ErrNotExist) {
-		l.Error(err, fmt.Sprintf("Could not find path %v in source %v", install.Spec.Path, sourceObj))
-		return ctrl.Result{RequeueAfter: time.Minute}, err
-	}
+	// if _, err := os.Stat(filepath.Join(baseDir, config.ZarfYAML)); errors.Is(err, os.ErrNotExist) {
+	// 	l.Error(err, fmt.Sprintf("Could not find path %v in source %v", install.Spec.Path, sourceObj))
+	// 	return ctrl.Result{RequeueAfter: time.Minute}, err
+	// }
 
+	// Not sure if I still need to do this
 	state, err := k8s.LoadZarfState()
 	if err != nil {
 		return ctrl.Result{Requeue: true}, err
 	}
 	config.InitState(state)
-	//auto confirm?
+	//auto confirm
 	config.CommonOptions.Confirm = true
+
 	config.CliArch = "amd64"
 	//see if this folder has a Zarf.yaml file in  it, otherwise its an oci already built
 
@@ -203,9 +205,26 @@ func (r *InstallationReconciler) Reconcile(ctx context.Context, req ctrl.Request
 			return ctrl.Result{Requeue: true}, err
 		}
 		config.DeployOptions.PackagePath = files[0]
+		// Would like to get the pakage name here so I can delete it safely later
+		// err = r.patchStatus(ctx, req.NamespacedName, zarfdevv1beta1.InstallationStatus{
+		// 	PackageName: zPackage.Metadata.Name,
+		// 	// Conditions: []metav1.Condition{{
+		// 	// 	Type:    meta.ReadyCondition,
+		// 	// 	Status:  metav1.ConditionTrue,
+		// 	// 	Reason:  "Healthy",
+		// 	// 	Message: "Healthy",
+		// 	// },
+		// 	// }})
+		// })
+		// if err != nil {
+		// 	l.Error(err, fmt.Sprintf("Error patching status: %v", err))
+		// }
 
 	} else {
+		// zarf.yaml in the path, so lets build one
+		// Build it into the same location as the zarf.yaml
 		config.CreateOptions.OutputDirectory = baseDir
+		// Would like this to return an error instead of exiting
 		packager.Create(baseDir)
 		//wont work for more than one yet, but yolo
 		files, err := filepath.Glob(baseDir + "/" + "*.tar*")
@@ -222,6 +241,7 @@ func (r *InstallationReconciler) Reconcile(ctx context.Context, req ctrl.Request
 
 		err = yaml.Unmarshal(content, &zPackage)
 
+		// Save the packageName so we can remove it later
 		err = r.patchStatus(ctx, req.NamespacedName, zarfdevv1beta1.InstallationStatus{
 			PackageName: zPackage.Metadata.Name,
 			// Conditions: []metav1.Condition{{
@@ -235,14 +255,12 @@ func (r *InstallationReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		if err != nil {
 			l.Error(err, fmt.Sprintf("Error patching status: %v", err))
 		}
-
 	}
 
 	b, _ = json.MarshalIndent(state, "", "\t")
 	l.Info(string(b))
 
-	config.InitState(state)
-
+	// Now deploy it!
 	packager.Deploy()
 	l.Info("Deployment successful")
 
