@@ -34,6 +34,7 @@ import (
 	"github.com/fluxcd/pkg/apis/meta"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/mholt/archiver/v3"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -205,20 +206,32 @@ func (r *InstallationReconciler) Reconcile(ctx context.Context, req ctrl.Request
 			return ctrl.Result{Requeue: true}, err
 		}
 		config.DeployOptions.PackagePath = files[0]
-		// Would like to get the pakage name here so I can delete it safely later
-		// err = r.patchStatus(ctx, req.NamespacedName, zarfdevv1beta1.InstallationStatus{
-		// 	PackageName: zPackage.Metadata.Name,
-		// 	// Conditions: []metav1.Condition{{
-		// 	// 	Type:    meta.ReadyCondition,
-		// 	// 	Status:  metav1.ConditionTrue,
-		// 	// 	Reason:  "Healthy",
-		// 	// 	Message: "Healthy",
-		// 	// },
-		// 	// }})
-		// })
-		// if err != nil {
-		// 	l.Error(err, fmt.Sprintf("Error patching status: %v", err))
-		// }
+
+		dest := filepath.Join(os.TempDir(), "zarf", sourceObj.GetArtifact().Checksum+"-untar")
+		defer os.RemoveAll(dest)
+		// Extract the archive
+		err = archiver.Extract(files[0], config.ZarfYAML, dest)
+		if err != nil {
+			l.Error(err, "Error extracting OCI zarf package")
+			return ctrl.Result{RequeueAfter: time.Minute}, err
+		}
+
+		configPath := filepath.Join(dest, "zarf.yaml")
+		content, err := os.ReadFile(configPath)
+		if err != nil {
+			l.Error(err, "Error reading zarf.yaml from extracted zarf package")
+			return ctrl.Result{RequeueAfter: time.Minute}, err
+		}
+		zPackage := ztypes.ZarfPackage{}
+
+		err = yaml.Unmarshal(content, &zPackage)
+
+		err = r.patchStatus(ctx, req.NamespacedName, zarfdevv1beta1.InstallationStatus{
+			PackageName: zPackage.Metadata.Name,
+		})
+		if err != nil {
+			l.Error(err, fmt.Sprintf("Error patching status: %v", err))
+		}
 
 	} else {
 		// zarf.yaml in the path, so lets build one
@@ -476,6 +489,12 @@ func MkdirTempAbs(dir, pattern string) (string, error) {
 
 func (r *InstallationReconciler) finalize(ctx context.Context, install zarfdevv1beta1.Installation) (ctrl.Result, error) {
 	l := log.FromContext(ctx)
+
+	if install.Status.PackageName == "" {
+		//extract from the OCI. Probably want to do this in the deploy
+		// rather than here so we can save it in the status
+
+	}
 
 	packager.Remove(install.Status.PackageName)
 
