@@ -1,6 +1,9 @@
 # zarf-controller
 
-Build and deploy Zarf packages from a git repository
+Build and deploy Zarf packages from a git repository or OCI Registry
+
+
+![Zarf Controller Diagram](./Zarf-Controller.drawio.png)
 
 
 ## Issues
