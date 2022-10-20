@@ -1,0 +1,17 @@
+kind: ZarfPackageConfig
+metadata:
+  name: podinfo
+  description: "The all powerful Podinfo"
+components:
+- name: podinfo
+  required: true
+  charts:
+  - name: podinfo
+    url: https://stefanprodan.github.io/podinfo
+    version: 6.2.2
+    namespace: podinfo
+    valuesFiles:
+      - values.yaml
+  images:
+    - ghcr.io/stefanprodan/podinfo:6.2.2
+    - redis:6.0.8
