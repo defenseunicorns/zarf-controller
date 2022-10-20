@@ -1,0 +1,23 @@
+apiVersion: zarf.dev/v1beta1
+kind: Installation
+metadata:
+  name: podinfo
+spec:
+spec:
+  interval: 2m
+  sourceRef:
+    kind: GitRepository
+    name: podinfo
+  path: ./examples/podinfo
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: GitRepository
+metadata:
+  name: podinfo
+  namespace: default
+spec:
+  interval: 1m0s
+  ref:
+    branch: main
+  url: https://github.com/defenseunicorns/zarf-controller
+---
